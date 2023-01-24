@@ -38,7 +38,7 @@ app.post("/signup", async (req, res) => {
 			role,
 		});
 		await newUser.save();
-		return res.status(201).send(newUser);
+		return res.status(201).send({ message: "User Created" });
 	} catch (e) {
 		return res.status(500).send(e.message);
 	}
