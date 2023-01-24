@@ -1,12 +1,15 @@
 const express = require("express");
 const bcrypt = require("bcrypt");
 const UserModel = require("../models/user.model");
+const jwt = require("jsonwebtoken");
 
 const app = express.Router();
 
 const bcryptPassword = async (password) => {
 	return await bcrypt.hash(password, 10);
 };
+
+const secrectToken = process.env.SECRECTTOKEN;
 
 const compareBcryptPassword = async (password, passwordHash) => {
 	return await bcrypt.compare(password, passwordHash);
@@ -46,20 +49,21 @@ app.post("/login", async (req, res) => {
 
 	const user = await UserModel.findOne({ email });
 	if (user && (await compareBcryptPassword(password, user.password))) {
+		const token = jwt.sign(
+			{
+				fullname: user.fullname,
+				role: user.role,
+				email: user.email,
+			},
+			secrectToken,
+			{ expiresIn: "7 days" }
+		);
 		return res.status(200).send({
 			message: "Login Success",
-			email: user.email,
+			token,
 		});
 	} else {
 		return res.status(401).send("invalid credentials");
-	}
-});
-
-app.post("/getProfile", async (req, res) => {
-	const { email } = req.body;
-	const user = await UserModel.findOne({ email });
-	if (user) {
-		res.status(200).send({ email: user.email, name: user.name });
 	}
 });
 
